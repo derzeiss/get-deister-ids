@@ -61,7 +61,10 @@ const getOverview = () => {
 
 const getDetails = (data: OverviewRes) => {
   const res = data.Items.map((row) => {
-    const url = path.join(URL_BASE_ENDPOINT, encodeURIComponent(`?$filter=type eq '${row.type}'`));
+    const url = `${URL_BASE_ENDPOINT}?$filter=type%20eq%20%27g_1_%5B${encodeURIComponent(
+      row.name
+    )}%5D%27`;
+
     console.log('Fetching details for', url);
     return got.get(url, { cookieJar }).json();
   });
