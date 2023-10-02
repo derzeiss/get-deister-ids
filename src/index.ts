@@ -1,13 +1,12 @@
 import dotenv from 'dotenv';
 dotenv.config();
 
+import { existsSync, mkdirSync, writeFileSync } from 'fs';
 import got from 'got';
 import path from 'path';
-import { existsSync, mkdirSync, writeFileSync } from 'fs';
 import { CookieJar } from 'tough-cookie';
 import { ResEntity } from './types/ResEntity.js';
 import { ResIdentItem } from './types/ResIdentItem.js';
-import { DEMO_DETAILS } from './demoData.js';
 
 const LOGS_DIR = path.join(path.dirname(process.argv[1]), '..', '/logs');
 const API_URL = process.env.API_URL || 'http://localhost:8095/';
@@ -22,8 +21,8 @@ const main = async () => {
   logData(JSON.stringify(overview, null, 2), 'overview');
   const details = await getDetails(overview);
   logData(JSON.stringify(details, null, 2), 'details');
-  const flattened = flattenRes(DEMO_DETAILS);
-  createNamesLog(flattened);
+  const flattened = flattenRes(details);
+  writeNamesLog(flattened);
   console.log('done');
 };
 
@@ -38,7 +37,7 @@ const getDetails = (data: ResEntity) => {
     )}%5D%27`;
 
     console.log('Fetching details for', url);
-    return got.get(url, { cookieJar }).json();
+    return got.get(url, { cookieJar }).json() as Promise<ResEntity<ResIdentItem>>;
   });
   return Promise.all(res);
 };
@@ -66,8 +65,8 @@ const flattenRes = (details: ResEntity<ResIdentItem>[]) => {
   return flatData;
 };
 
-const createNamesLog = (flattenRes: ResIdentItem[]) => {
-  const names = flattenRes.map((i) => i.name.replace(/ - CARD$/, '')).join('\n');
+const writeNamesLog = (flattenRes: ResIdentItem[]) => {
+  const names = flattenRes.map((i) => i.name.replace(/ - (CARD|Karte)$/, '')).join('\n');
   logData(names, 'names', 'txt');
 };
 
