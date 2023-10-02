@@ -70,9 +70,14 @@ const getDetails = (data: OverviewRes) => {
 const logData = (data: object, name?: string) => {
   if (!existsSync(LOGS_DIR)) mkdirSync(LOGS_DIR);
   const nameSuffix = name ? `_${name}` : '';
-  const filename = `${new Date().toISOString()}${nameSuffix}.json`; // 2023-10-02T15:33:39.277Z_overview
+  const timestamp = new Date()
+    .toISOString()
+    .replace(/[Z]/g, '') // remove Z at the end
+    .replace(/\.\d+/, '') // remove milliseconds
+    .replace(/[:]/g, ''); // remove colons between minutes
+  const filename = `${timestamp}${nameSuffix}.json`; // 2023-10-02T15:33:39.277Z_overview
   writeFileSync(path.join(LOGS_DIR, filename), JSON.stringify(data), { flag: 'wx' });
 };
 
-// logData(DEMO_JSON, 'overview');
-main();
+logData(DEMO_JSON, 'overview');
+// main();
