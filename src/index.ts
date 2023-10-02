@@ -79,5 +79,5 @@ const logData = (data: object, name?: string) => {
   writeFileSync(path.join(LOGS_DIR, filename), JSON.stringify(data), { flag: 'wx' });
 };
 
-logData(DEMO_JSON, 'overview');
-// main();
+// logData(DEMO_JSON, 'overview');
+main();
