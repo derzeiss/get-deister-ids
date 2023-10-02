@@ -5,39 +5,9 @@ import got from 'got';
 import path from 'path';
 import { existsSync, mkdirSync, writeFileSync } from 'fs';
 import { CookieJar } from 'tough-cookie';
-interface OverviewRes {
-  count: number;
-  Items: { name: string; icon: string; type: string }[];
-}
-
-const DEMO_JSON: OverviewRes = {
-  count: 23,
-  Items: [
-    { name: '#', icon: 'svgFolderOpen', type: 'g_1_[#]' },
-    { name: 'A', icon: 'svgFolderOpen', type: 'g_1_[A]' },
-    { name: 'B', icon: 'svgFolderOpen', type: 'g_1_[B]' },
-    { name: 'C', icon: 'svgFolderOpen', type: 'g_1_[C]' },
-    { name: 'D', icon: 'svgFolderOpen', type: 'g_1_[D]' },
-    { name: 'E', icon: 'svgFolderOpen', type: 'g_1_[E]' },
-    { name: 'F', icon: 'svgFolderOpen', type: 'g_1_[F]' },
-    { name: 'G', icon: 'svgFolderOpen', type: 'g_1_[G]' },
-    { name: 'H', icon: 'svgFolderOpen', type: 'g_1_[H]' },
-    { name: 'J', icon: 'svgFolderOpen', type: 'g_1_[J]' },
-    { name: 'K', icon: 'svgFolderOpen', type: 'g_1_[K]' },
-    { name: 'L', icon: 'svgFolderOpen', type: 'g_1_[L]' },
-    { name: 'M', icon: 'svgFolderOpen', type: 'g_1_[M]' },
-    { name: 'N', icon: 'svgFolderOpen', type: 'g_1_[N]' },
-    { name: 'O', icon: 'svgFolderOpen', type: 'g_1_[O]' },
-    { name: 'P', icon: 'svgFolderOpen', type: 'g_1_[P]' },
-    { name: 'R', icon: 'svgFolderOpen', type: 'g_1_[R]' },
-    { name: 'S', icon: 'svgFolderOpen', type: 'g_1_[S]' },
-    { name: 'T', icon: 'svgFolderOpen', type: 'g_1_[T]' },
-    { name: 'U', icon: 'svgFolderOpen', type: 'g_1_[U]' },
-    { name: 'V', icon: 'svgFolderOpen', type: 'g_1_[V]' },
-    { name: 'Y', icon: 'svgFolderOpen', type: 'g_1_[Y]' },
-    { name: 'Z', icon: 'svgFolderOpen', type: 'g_1_[Z]' },
-  ],
-};
+import { ResEntity } from './types/ResEntity.js';
+import { ResIdentItem } from './types/ResIdentItem.js';
+import { DEMO_DETAILS } from './demoData.js';
 
 const LOGS_DIR = path.join(path.dirname(process.argv[1]), '..', '/logs');
 const API_URL = process.env.API_URL || 'http://localhost:8095/';
@@ -49,17 +19,19 @@ console.log('Using sessionId', sessionId);
 
 const main = async () => {
   const overview = await getOverview();
-  logData(overview, 'overview');
+  logData(JSON.stringify(overview, null, 2), 'overview');
   const details = await getDetails(overview);
-  logData(details, 'details');
+  logData(JSON.stringify(details, null, 2), 'details');
+  const flattened = flattenRes(DEMO_DETAILS);
+  createNamesLog(flattened);
   console.log('done');
 };
 
 const getOverview = () => {
-  return got.get(URL_BASE_ENDPOINT, { cookieJar }).json() as Promise<OverviewRes>;
+  return got.get(URL_BASE_ENDPOINT, { cookieJar }).json() as Promise<ResEntity>;
 };
 
-const getDetails = (data: OverviewRes) => {
+const getDetails = (data: ResEntity) => {
   const res = data.Items.map((row) => {
     const url = `${URL_BASE_ENDPOINT}?$filter=type%20eq%20%27g_1_%5B${encodeURIComponent(
       row.name
@@ -71,7 +43,7 @@ const getDetails = (data: OverviewRes) => {
   return Promise.all(res);
 };
 
-const logData = (data: object, name?: string) => {
+const logData = (data: string, name?: string, ext = 'json') => {
   if (!existsSync(LOGS_DIR)) mkdirSync(LOGS_DIR);
   const nameSuffix = name ? `_${name}` : '';
   const timestamp = new Date()
@@ -79,9 +51,24 @@ const logData = (data: object, name?: string) => {
     .replace(/[Z]/g, '') // remove Z at the end
     .replace(/\.\d+/, '') // remove milliseconds
     .replace(/[:]/g, ''); // remove colons between minutes
-  const filename = `${timestamp}${nameSuffix}.json`; // 2023-10-02T15:33:39.277Z_overview
-  writeFileSync(path.join(LOGS_DIR, filename), JSON.stringify(data), { flag: 'wx' });
+  const filename = `${timestamp}${nameSuffix}.${ext}`; // 2023-10-02T15:33:39.277Z_overview.json
+  writeFileSync(path.join(LOGS_DIR, filename), data, { flag: 'wx' });
 };
 
-// logData(DEMO_JSON, 'overview');
+const flattenRes = (details: ResEntity<ResIdentItem>[]) => {
+  const flatData = details.reduce<ResIdentItem[]>((arr, currLetter) => {
+    currLetter.Items.forEach((item) => {
+      arr.push(item);
+      return null;
+    });
+    return arr;
+  }, []);
+  return flatData;
+};
+
+const createNamesLog = (flattenRes: ResIdentItem[]) => {
+  const names = flattenRes.map((i) => i.name.replace(/ - CARD$/, '')).join('\n');
+  logData(names, 'names', 'txt');
+};
+
 main();
