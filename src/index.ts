@@ -39,7 +39,7 @@ const DEMO_JSON: OverviewRes = {
   ],
 };
 
-const LOGS_DIR = './logs';
+const LOGS_DIR = path.join(path.dirname(process.argv[1]), '..', '/logs');
 const API_URL = process.env.API_URL || 'http://localhost:8095/';
 const URL_BASE_ENDPOINT = path.join(API_URL, 'treeView/Credential/');
 const sessionId = process.argv[process.argv.length - 1];
