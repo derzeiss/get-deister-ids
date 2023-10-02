@@ -3,6 +3,7 @@ dotenv.config();
 
 import got from 'got';
 import path from 'path';
+import { existsSync, mkdirSync, writeFileSync } from 'fs';
 import { CookieJar } from 'tough-cookie';
 interface OverviewRes {
   count: number;
@@ -38,6 +39,7 @@ const DEMO_JSON: OverviewRes = {
   ],
 };
 
+const LOGS_DIR = './logs';
 const API_URL = process.env.API_URL || 'http://localhost:8095/';
 const URL_BASE_ENDPOINT = path.join(API_URL, 'treeView/Credential/');
 const sessionId = process.argv[process.argv.length - 1];
@@ -47,8 +49,10 @@ console.log('Using sessionId', sessionId);
 
 const main = async () => {
   const overview = await getOverview();
+  logData(overview, 'overview');
   const details = await getDetails(overview);
-  console.log('res', details);
+  logData(details, 'details');
+  console.log('done');
 };
 
 const getOverview = () => {
@@ -63,4 +67,12 @@ const getDetails = (data: OverviewRes) => {
   return Promise.all(res);
 };
 
+const logData = (data: object, name?: string) => {
+  if (!existsSync(LOGS_DIR)) mkdirSync(LOGS_DIR);
+  const nameSuffix = name ? `_${name}` : '';
+  const filename = `${new Date().toISOString()}${nameSuffix}.json`; // 2023-10-02T15:33:39.277Z_overview
+  writeFileSync(path.join(LOGS_DIR, filename), JSON.stringify(data));
+};
+
+// logData(DEMO_JSON, 'overview');
 main();
