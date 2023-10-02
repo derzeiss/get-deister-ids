@@ -71,7 +71,7 @@ const logData = (data: object, name?: string) => {
   if (!existsSync(LOGS_DIR)) mkdirSync(LOGS_DIR);
   const nameSuffix = name ? `_${name}` : '';
   const filename = `${new Date().toISOString()}${nameSuffix}.json`; // 2023-10-02T15:33:39.277Z_overview
-  writeFileSync(path.join(LOGS_DIR, filename), JSON.stringify(data));
+  writeFileSync(path.join(LOGS_DIR, filename), JSON.stringify(data), { flag: 'wx' });
 };
 
 // logData(DEMO_JSON, 'overview');
