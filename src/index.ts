@@ -7,7 +7,7 @@ import { CookieJar } from 'tough-cookie';
 
 const API_URL = process.env.API_URL || 'http://localhost:8095/';
 const URL_BASE_ENDPOINT = path.join(API_URL, 'treeView/Credential/');
-const sessionId = process.argv[0];
+const sessionId = process.argv[process.argv.length - 1];
 
 const getData = async () => {
   const cookieJar = new CookieJar();
